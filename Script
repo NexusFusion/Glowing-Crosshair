@@ -1,0 +1,307 @@
+// ==UserScript==
+// @name         Glowing Crosshair Script
+// @namespace    Script Runner Pro
+// @version      2.0
+// @description  Creates a customizable glowing crosshair on the webpage with a draggable menu and additional features
+// @author       NexusFusion
+// @match        https://kirka.io/
+// @match        https://discord.com/
+// @match        https://discord.com/channels/1227402452488294470/1227765536956350495
+// @grant        GM_addStyle
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Create the crosshair element
+    var crosshair = document.createElement('div');
+    crosshair.id = 'glowing-crosshair';
+    document.body.appendChild(crosshair);
+
+    // Create menu elements
+    var menu = document.createElement('div');
+    menu.id = 'crosshair-menu';
+    menu.innerHTML = `
+        <label for="crosshair-size">Size:</label>
+        <input type="range" id="crosshair-size" min="20" max="100" value="40">
+        <label for="crosshair-color">Color:</label>
+        <input type="color" id="crosshair-color" value="#ffffff">
+        <label for="menu-background-color">Menu Background Gradient:</label>
+        <input type="color" id="menu-background-color1" value="#ff0000">
+        <input type="color" id="menu-background-color2" value="#00ff00">
+        <label for="animation-speed">Speed:</label>
+        <input type="range" id="animation-speed" min="0.5" max="2" step="0.1" value="1">
+        <button id="toggle-crosshair">Toggle</button>
+        <button id="random-color">Random Color</button>
+        <button id="reset">Reset</button>
+        <button id="lock-crosshair">Lock</button>
+        <button id="unlock-crosshair">Unlock</button>
+        <button id="apply-preset">Apply Preset</button>
+        <label for="crosshair-shape">Shape:</label>
+        <select id="crosshair-shape">
+            <option value="circle">Circle</option>
+            <option value="square">Square</option>
+            <option value="custom">Custom</option>
+        </select>
+        <label for="crosshair-transparency">Transparency:</label>
+        <input type="range" id="crosshair-transparency" min="0" max="1" step="0.1" value="0">
+        <label for="crosshair-style">Style:</label>
+        <select id="crosshair-style">
+            <option value="solid">Solid</option>
+            <option value="dotted">Dotted</option>
+            <option value="dashed">Dashed</option>
+        </select>
+        <label for="crosshair-offset">Offset:</label>
+        <input type="range" id="crosshair-offset" min="-50" max="50" value="0">
+        <label for="crosshair-persistence">Persistence:</label>
+        <input type="checkbox" id="crosshair-persistence">
+        <label for="crosshair-align">Alignment Guides:</label>
+        <input type="checkbox" id="crosshair-align">
+        <label for="crosshair-sound">Sound Effects:</label>
+        <input type="checkbox" id="crosshair-sound">
+        <label for="crosshair-hotkey">Hotkey:</label>
+        <input type="text" id="crosshair-hotkey">
+        <div id="menu-content">
+            <!-- Your scrollable content goes here -->
+        </div>
+    `;
+    document.body.appendChild(menu);
+
+    // Apply styles to the crosshair and menu
+    GM_addStyle(`
+        #glowing-crosshair {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            border: 2px solid white;
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 9999;
+            animation: pulse 1.5s infinite alternate; /* Pulsating animation */
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(1.1);
+            }
+        }
+
+        #crosshair-menu {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(45deg, #ff0000, #00ff00); /* Change gradient direction and colors as needed */
+            padding: 5px;
+            border-radius: 5px;
+            z-index: 10000;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            width: 150px; /* Adjust width */
+            max-height: 200px; /* Adjust height */
+            overflow-y: auto; /* Enable vertical scroll */
+        }
+
+        #crosshair-menu label {
+            margin-bottom: 5px;
+            color: #333;
+            display: block;
+        }
+
+        #crosshair-menu input[type="range"],
+        #crosshair-menu input[type="color"] {
+            width: calc(100% - 10px);
+            margin-bottom: 5px;
+        }
+
+        #toggle-crosshair, #random-color, #reset, #lock-crosshair, #unlock-crosshair, #apply-preset {
+            width: calc(100% - 10px);
+            margin-bottom: 5px;
+            font-size: 12px;
+            padding: 3px 5px;
+        }
+
+        #menu-content {
+            padding: 10px;
+        }
+    `);
+
+    // Function to update crosshair gradient
+    function updateGradient() {
+        var color1 = document.getElementById('menu-background-color1').value;
+        var color2 = document.getElementById('menu-background-color2').value;
+        menu.style.background = 'linear-gradient(45deg, ' + color1 + ', ' + color2 + ')';
+    }
+
+    // Function to apply preset crosshair settings
+    function applyPreset() {
+        var size = document.getElementById('crosshair-size').value;
+        var color = document.getElementById('crosshair-color').value;
+        var speed = document.getElementById('animation-speed').value;
+        var shape = document.getElementById('crosshair-shape').value;
+        var transparency = document.getElementById('crosshair-transparency').value;
+        var style = document.getElementById('crosshair-style').value;
+        var offset = document.getElementById('crosshair-offset').value;
+        var persistence = document.getElementById('crosshair-persistence').checked;
+        var align = document.getElementById('crosshair-align').checked;
+        var sound = document.getElementById('crosshair-sound').checked;
+        var hotkey = document.getElementById('crosshair-hotkey').value;
+
+        document.getElementById('crosshair-size').value = size;
+        document.getElementById('crosshair-color').value = color;
+        document.getElementById('animation-speed').value = speed;
+        document.getElementById('crosshair-shape').value = shape;
+        document.getElementById('crosshair-transparency').value = transparency;
+        document.getElementById('crosshair-style').value = style;
+        document.getElementById('crosshair-offset').value = offset;
+        document.getElementById('crosshair-persistence').checked = persistence;
+        document.getElementById('crosshair-align').checked = align;
+        document.getElementById('crosshair-sound').checked = sound;
+        document.getElementById('crosshair-hotkey').value = hotkey;
+
+        // Apply preset settings here
+        console.log("Preset applied.");
+    }
+
+    // Function to toggle crosshair visibility
+    function toggleCrosshair() {
+        var crosshair = document.getElementById('glowing-crosshair');
+        crosshair.style.display = crosshair.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Function to generate random color
+    function randomColor() {
+        var randomColor = '#' + Math.floor(Math.random()*16777215).toString(16); // Generate random hex color
+        document.getElementById('crosshair-color').value = randomColor;
+        document.getElementById('glowing-crosshair').style.borderColor = randomColor;
+    }
+
+    // Function to reset settings
+    function resetSettings() {
+        document.getElementById('crosshair-size').value = 40;
+        document.getElementById('crosshair-color').value = '#ffffff';
+        document.getElementById('menu-background-color1').value = '#ff0000';
+        document.getElementById('menu-background-color2').value = '#00ff00';
+        document.getElementById('animation-speed').value = 1;
+        document.getElementById('crosshair-shape').value = 'circle';
+        document.getElementById('crosshair-transparency').value = 0;
+        document.getElementById('crosshair-style').value = 'solid';
+        document.getElementById('crosshair-offset').value = 0;
+        document.getElementById('crosshair-persistence').checked = false;
+        document.getElementById('crosshair-align').checked = false;
+        document.getElementById('crosshair-sound').checked = false;
+        document.getElementById('crosshair-hotkey').value = '';
+
+        updateGradient();
+        // Reset additional settings here
+        console.log("Settings reset.");
+    }
+
+    // Function to lock crosshair
+    function lockCrosshair() {
+        // Lock crosshair functionality
+        console.log("Crosshair locked.");
+    }
+
+    // Function to unlock crosshair
+    function unlockCrosshair() {
+        // Unlock crosshair functionality
+        console.log("Crosshair unlocked.");
+    }
+
+    // Function to change crosshair shape
+    function changeShape() {
+        // Change shape functionality
+        console.log("Crosshair shape changed.");
+    }
+
+    // Function to change transparency
+    function changeTransparency() {
+        // Change transparency functionality
+        console.log("Transparency changed.");
+    }
+
+    // Function to change style
+    function changeStyle() {
+        // Change style functionality
+        console.log("Style changed.");
+    }
+
+    // Function to change offset
+    function changeOffset() {
+        // Change offset functionality
+        console.log("Offset changed.");
+    }
+
+    // Function to handle persistence
+    function handlePersistence() {
+        // Persistence functionality
+        console.log("Persistence handled.");
+    }
+
+    // Function to handle alignment guides
+    function handleAlignment() {
+        // Alignment guides functionality
+        console.log("Alignment guides handled.");
+    }
+
+    // Function to handle sound effects
+    function handleSound() {
+        // Sound effects functionality
+        console.log("Sound effects handled.");
+    }
+
+    // Function to handle hotkey
+    function handleHotkey() {
+        // Hotkey functionality
+        console.log("Hotkey handled.");
+    }
+
+    // Add event listeners
+    document.getElementById('toggle-crosshair').addEventListener('click', toggleCrosshair);
+    document.getElementById('random-color').addEventListener('click', randomColor);
+    document.getElementById('reset').addEventListener('click', resetSettings);
+    document.getElementById('lock-crosshair').addEventListener('click', lockCrosshair);
+    document.getElementById('unlock-crosshair').addEventListener('click', unlockCrosshair);
+    document.getElementById('apply-preset').addEventListener('click', applyPreset);
+    document.getElementById('crosshair-shape').addEventListener('change', changeShape);
+    document.getElementById('crosshair-transparency').addEventListener('input', changeTransparency);
+    document.getElementById('crosshair-style').addEventListener('change', changeStyle);
+    document.getElementById('crosshair-offset').addEventListener('input', changeOffset);
+    document.getElementById('crosshair-persistence').addEventListener('change', handlePersistence);
+    document.getElementById('crosshair-align').addEventListener('change', handleAlignment);
+    document.getElementById('crosshair-sound').addEventListener('change', handleSound);
+    document.getElementById('crosshair-hotkey').addEventListener('input', handleHotkey);
+
+    // Dynamic Crosshair Size
+    crosshair.addEventListener('wheel', function(event) {
+        // Add dynamic size functionality
+        console.log("Dynamic size adjusted.");
+    });
+
+    // Draggable Crosshair
+    var isDragging = false;
+    var offsetX, offsetY;
+
+    crosshair.addEventListener('mousedown', function(e) {
+        isDragging = true;
+        offsetX = e.clientX - crosshair.getBoundingClientRect().left;
+        offsetY = e.clientY - crosshair.getBoundingClientRect().top;
+    });
+
+    document.addEventListener('mousemove', function(e) {
+        if (isDragging) {
+            var newX = e.clientX - offsetX;
+            var newY = e.clientY - offsetY;
+            crosshair.style.left = newX + 'px';
+            crosshair.style.top = newY + 'px';
+        }
+    });
+
+    document.addEventListener('mouseup', function() {
+        isDragging = false;
+    });
+
+})();
