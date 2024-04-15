@@ -1,4 +1,4 @@
-Glowing Crosshair Script v2.0
+# Glowing Crosshair Script v2.0
 
 Description:
 Inject a dynamic and customizable glowing crosshair onto your favorite webpages with this script. Crafted by NexusFusion, this script empowers users to personalize their browsing experience by adding a draggable menu and a plethora of additional features. From altering size, color, and shape to toggling persistence and alignment guides, this script offers a seamless way to enhance navigation and interaction on the web.
